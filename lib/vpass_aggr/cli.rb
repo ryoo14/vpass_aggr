@@ -45,13 +45,14 @@ module VpassAggr
     private
 
     def check_args(division, period)
+      # divisionに年月日以外の文字が指定されていないか
       if not %w/year month day/.include?(division)
         raise ArgumentError
-      else
-        period.each do |p|
-          if p !~ /20[0-9][0-9]/
-            raise ArgumentError
-          end
+      end
+      # periodに指定されている西暦が常識的な数字か
+      period.each do |pd|
+        if pd.to_s !~ /^20[0-9]{2}/
+          raise ArgumentError
         end
       end
     end
