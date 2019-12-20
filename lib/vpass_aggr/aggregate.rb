@@ -51,25 +51,42 @@ module VpassAggr
       sum
     end
 
-    # TODO: コピーしただけだからちゃんと書く
     def sum_day
       pay_data_csvfiles = []
       period.each do |p|
-        year  = p[0..3]
-        month = p[4..5]
-        pay_data_csvfiles_path = "#{config.data_dir}/#{year}/#{month}.csv"
-        pay_data_csvfiles += Dir.glob(pay_data_csvfiles_path)
+        if p.size == 4
+          pay_data_csvfiles_path = "#{config.data_dir}/#{p}/*.csv"
+          pay_data_csvfiles += Dir.glob(pay_data_csvfiles_path)
+        else
+          year  = p[0..3]
+          month = p[4..5]
+          pay_data_csvfiles_path = "#{config.data_dir}/#{year}/#{year}#{month}.csv"
+          pay_data_csvfiles += Dir.glob(pay_data_csvfiles_path)
+        end
       end
       sum = ['day,sum']
       pay_data_csvfiles.sort.each do |c|
         month = File.basename(c, '.csv')
 
-        # vpassからエクスポートしたデータは最上行に集計に不要な名前やカード種別の情報があり、
-        # 最下行に月の支払い総額が記録される
-        # dailyの集計の場合はどちらも不要なので、切り捨てて集計する
         # データの文字コードはshift-jisなので、utf-8にエンコードする
+        daily_sum = {}
         CSV.read(c, encoding: 'SHIFT_JIS:UTF-8').each do |cd|
-        sum << "#{month},#{monthly_sum[5]}"
+          # vpassからエクスポートしたデータは途中行に氏名などが記載されている
+          # それらは集計に不要なので、切り捨てて集計する
+          if cd[0] =~ /^20.*/
+            if daily_sum[cd[0]].nil?
+              daily_sum[cd[0]] = cd[2].to_i
+            else
+              daily_sum[cd[0]] += cd[2].to_i
+            end
+          end
+        end
+
+        daily_sum = daily_sum.sort { |(k1, v1), (k2, v2)| k1 <=> k2 }
+
+        daily_sum.each do |k,v|
+          sum << "#{k},#{v}"
+        end
       end
       sum
     end
