@@ -51,7 +51,7 @@ module VpassAggr
       end
       # periodに指定されている西暦が常識的な数字か
       period.each do |pd|
-        if pd.to_s !~ /^20[0-9]{2}/
+        if pd.to_s !~ /^20[0-9]{4}/
           raise ArgumentError
         end
       end
